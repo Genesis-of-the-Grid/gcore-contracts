@@ -1,10 +1,10 @@
-# GCORE — Genesis Presale Smart Contracts
+# GCORE — Genesis Presale Smart Contracts - Not yet pushed on mainnet
 
 Smart contracts for the **Genesis Core Token (GCORE)** presale on **BNB Chain**.
 
 This repository contains the full, unmodified Solidity source of the seven production
 contracts. It is published for exchange listings, launchpad reviews and independent
-audit — everything below is verifiable against the on-chain bytecode.
+audit
 
 | | |
 |---|---|
