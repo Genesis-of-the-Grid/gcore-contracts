@@ -23,7 +23,7 @@ interface IPancakeFactory {
 
 /**
  * @title LiquidityLock
- * @notice DEX Liquidity Time-Lock for PancakeSwap launch (Spec 2.4).
+ * @notice DEX Liquidity Time-Lock for PancakeSwap launch.
  *
  *  Holdings: 28'000'000 GCORE + USD 2'800'000 USDT
  *  Lock: 24 months (immutable, enforced by the contract)
@@ -49,7 +49,7 @@ contract LiquidityLock is AccessControl, ReentrancyGuard {
 
     bool    public tokenSet;
 
-    // ─── Lock state ───────────────────────────────────────────────────────────
+    // ─── Lock state ─────────────────────────────────────────────────────────
     uint256 public constant LOCK_DURATION = 730 days; // 24 months
     uint256 public lockStartTime;
     uint256 public lockEndTime;
@@ -57,7 +57,7 @@ contract LiquidityLock is AccessControl, ReentrancyGuard {
 
     IERC20  public lpToken;
 
-    // ─── Custom errors ────────────────────────────────────────────────────────
+    // ─── Custom errors ──────────────────────────────────────────────────────
     error ZeroAddress();
     error AlreadySet();
     error LiquidityAlreadyAdded();
@@ -71,7 +71,7 @@ contract LiquidityLock is AccessControl, ReentrancyGuard {
     error StillLocked();
     error NoLPTokens();
 
-    // ─── Events ───────────────────────────────────────────────────────────────
+    // ─── Events ─────────────────────────────────────────────────────────────
     event TokenSet(address gcore);
     event USDTReceived(uint256 amount);
     event LiquidityAdded(uint256 gcoreAmount, uint256 usdtAmount, uint256 lpAmount);
@@ -101,7 +101,7 @@ contract LiquidityLock is AccessControl, ReentrancyGuard {
         emit TokenSet(_gcore);
     }
 
-    // ─── Add liquidity to PancakeSwap ─────────────────────────────────────────
+    // ─── Add liquidity to PancakeSwap ───────────────────────────────────────
     /// @notice Admin calls this to add liquidity and lock LP tokens.
     ///         Must be called within 1 week of presale end (Nov 2027).
     /// @param gcoreAmount  GCORE to add (≤ balance, typically 28M)
@@ -149,7 +149,7 @@ contract LiquidityLock is AccessControl, ReentrancyGuard {
         emit LiquidityAdded(gcoreAmount, usdtAmount, lpAmount);
     }
 
-    // ─── Withdraw LP tokens after 24-month lock ────────────────────────────────
+    // ─── Withdraw LP tokens after 24-month lock ─────────────────────────────
     function withdrawLP(address recipient) external onlyRole(ADMIN_ROLE) nonReentrant {
         if (!liquidityAdded)                    revert LiquidityNotAdded();
         if (block.timestamp < lockEndTime)       revert StillLocked();
@@ -162,7 +162,7 @@ contract LiquidityLock is AccessControl, ReentrancyGuard {
         lpToken.safeTransfer(recipient, lpBal);
     }
 
-    // ─── View ──────────────────────────────────────────────────────────────────
+    // ─── View ───────────────────────────────────────────────────────────────
     function remainingLockTime() external view returns (uint256) {
         if (!liquidityAdded || block.timestamp >= lockEndTime) return 0;
         return lockEndTime - block.timestamp;
