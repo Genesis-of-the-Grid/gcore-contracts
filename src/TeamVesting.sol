@@ -16,7 +16,7 @@ interface IVestingTGE {
  * @title TeamVesting
  * @notice Team allocation vesting — 12-month cliff + 24-month linear, anchored
  *         to the same TGE as the investor VestingContract, with every withdrawal
- *         authorised by the owner Safe (Spec 3.3).
+ *         authorised by the owner Safe.
  *
  *  Total: 52'000'000 GCORE
  *
@@ -52,7 +52,7 @@ contract TeamVesting is Ownable2Step, ReentrancyGuard {
     IERC20  public gcore;
     bool    public tokenSet;
 
-    // ─── Allocation & vesting schedule ────────────────────────────────────────
+    // ─── Allocation & vesting schedule ──────────────────────────────────────
     uint256 public constant TOTAL_ALLOCATION = 52_000_000 * 1e18;
 
     // 1 month = exactly 30 days (invariant). Cliff 12 mo, then linear 24 mo.
@@ -69,12 +69,12 @@ contract TeamVesting is Ownable2Step, ReentrancyGuard {
     /// @notice Cumulative GCORE already released to the team.
     uint256 public released;
 
-    // ─── Custom errors ────────────────────────────────────────────────────────
+    // ─── Custom errors ──────────────────────────────────────────────────────
     error ZeroAddress();
     error AlreadySet();
     error NothingToRelease();
 
-    // ─── Events ───────────────────────────────────────────────────────────────
+    // ─── Events ─────────────────────────────────────────────────────────────
     event VestingContractSet(address indexed vestingContract);
     event TokensReleased(address indexed recipient, uint256 amount);
 
@@ -105,7 +105,7 @@ contract TeamVesting is Ownable2Step, ReentrancyGuard {
         return IVestingTGE(vestingContract).tgeTimestamp();
     }
 
-    // ─── Withdraw vested tokens (Safe-authorised) ─────────────────────────────
+    // ─── Withdraw vested tokens (Safe-authorised) ───────────────────────────
     /// @notice Pays out the currently claimable (vested − released) amount. Can be
     ///         called repeatedly — each call withdraws only the slice that has
     ///         vested since the previous one.
@@ -121,7 +121,7 @@ contract TeamVesting is Ownable2Step, ReentrancyGuard {
         gcore.safeTransfer(recipient, amount);
     }
 
-    // ─── Views ────────────────────────────────────────────────────────────────
+    // ─── Views ──────────────────────────────────────────────────────────────
     /// @notice Total GCORE vested so far (cumulative, ignoring what was released).
     ///         34 % unlocks as a lump at cliff end; the remaining 66 % vests
     ///         linearly per second over VESTING_DURATION.
