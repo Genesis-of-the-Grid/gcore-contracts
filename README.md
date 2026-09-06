@@ -76,8 +76,7 @@ Tokens are only distributed if the public presale reaches its softcap.
 A remainder below the minimum purchase could never be bought and would strand the hardcap,
 so the final buy absorbs it and the sale closes exactly at 10,000,000 GCORE.
 
-**Access control** mirrors the presale contracts: ownership is `Ownable2Step` and intended
-to be held by a multisig, with `renounceOwnership()` overridden to revert so the sale can
+**Access control** mirrors the presale contracts: ownership is `Ownable2Step` and held by a multisig, with `renounceOwnership()` overridden to revert so the sale can
 never be left unowned — it must stay stoppable and the operator key must stay rotatable. A
 separate low-privilege `operator` hot wallet lets the KYC backend approve addresses
 automatically; the operator can flip the KYC flag and nothing else — no access to funds, no
