@@ -9,15 +9,15 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title OpsWalletRelease
- * @notice One-time Ops-Wallet release of USD 550'000 after Softcap (Spec 6).
+ * @notice One-time Ops-Wallet release of USD 550'000 after Softcap.
  *
- *  Amount: USD 550'000 (fixed, one-time — Spec 6.1)
+ *  Amount: USD 550'000 (fixed, one-time)
  *  Trigger: Softcap confirmed on-chain
  *  Mechanism: single release, authorised by the owner Safe
  *
- *  Purpose-restricted to (Spec 6.2):
+ *  Purpose-restricted to:
  *   1. Legal documentation / full legal opinion
- *   2. Didit KYC/KYB runtime costs during presale
+ *   2. KYC/KYB provider runtime costs during presale
  *   3. External smart contract audit
  *
  *  Remaining funds: locked until the custody-bank transfer is complete.
@@ -35,11 +35,11 @@ contract OpsWalletRelease is Ownable2Step, ReentrancyGuard {
 
     address public presaleContract;
 
-    // ─── State ────────────────────────────────────────────────────────────────
+    // ─── State ──────────────────────────────────────────────────────────────
     bool    public releaseEnabled;
     bool    public fundsReleased;
 
-    // ─── Custom errors ────────────────────────────────────────────────────────
+    // ─── Custom errors ──────────────────────────────────────────────────────
     error ZeroAddress();
     error AlreadySet();
     error NotPresale();
@@ -49,7 +49,7 @@ contract OpsWalletRelease is Ownable2Step, ReentrancyGuard {
     error InsufficientBalance();
     error InvalidAmount();
 
-    // ─── Events ───────────────────────────────────────────────────────────────
+    // ─── Events ─────────────────────────────────────────────────────────────
     event ReleaseEnabled(uint256 usdtReceived);
     event FundsReleased(address indexed recipient, uint256 amount);
 
@@ -58,14 +58,14 @@ contract OpsWalletRelease is Ownable2Step, ReentrancyGuard {
         usdt = IERC20(_usdt);
     }
 
-    // ─── Setup (one-time, after deploy) ───────────────────────────────────────
+    // ─── Setup (one-time, after deploy) ─────────────────────────────────────
     function setPresaleContract(address _presale) external onlyOwner {
         if (presaleContract != address(0)) revert AlreadySet();
         if (_presale == address(0))        revert ZeroAddress();
         presaleContract = _presale;
     }
 
-    // ─── Called by PresaleContract on Softcap success ─────────────────────────
+    // ─── Called by PresaleContract on Softcap success ───────────────────────
     function enableRelease() external {
         if (msg.sender != presaleContract) revert NotPresale();
         if (releaseEnabled)                revert AlreadyEnabled();
@@ -73,7 +73,7 @@ contract OpsWalletRelease is Ownable2Step, ReentrancyGuard {
         emit ReleaseEnabled(usdt.balanceOf(address(this)));
     }
 
-    // ─── Release (one-time, Safe-authorised) ──────────────────────────────────
+    // ─── Release (one-time, Safe-authorised) ────────────────────────────────
     /// @notice Pays out the operational budget once. After this call no further
     ///         release is possible — any remaining balance stays locked, by design.
     function release(address recipient, uint256 usdtAmount)
