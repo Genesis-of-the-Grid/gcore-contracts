@@ -39,7 +39,7 @@ interface AggregatorV3Interface {
  * @title PresaleContract
  * @notice Manages the 6-phase GCORE presale (Jan 2027 – Oct 2027).
  *
- *  Phases (Spec 4.1):
+ *  Phases:
  *   I   Genesis Awakens    $0.04  01.01–31.01.2027  50M  Rush×1.50
  *   II  Echoes of Bastion  $0.05  01.02–28.02.2027  50M  Rush×1.25
  *   III Architects Arise   $0.06  01.03–31.03.2027  50M  Rush×1.20
@@ -58,7 +58,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
     bytes32 public constant ADMIN_ROLE    = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-    // ─── Custom errors ────────────────────────────────────────────────────────
+    // ─── Custom errors ──────────────────────────────────────────────────────
     error ZeroAddress();
     error AlreadySet();
     error AlreadyFinalized();
@@ -81,7 +81,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
     error StaleOraclePrice();
     error StaleOracleRound();
 
-    // ─── External contracts ───────────────────────────────────────────────────
+    // ─── External contracts ─────────────────────────────────────────────────
     IGCOREToken       public immutable gcore;
     IERC20            public immutable usdt;
     IVestingContract  public vestingContract;
@@ -89,13 +89,13 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
     IOpsWalletRelease public opsWallet;
     AggregatorV3Interface public immutable bnbPriceFeed; // Chainlink BNB/USD
 
-    // ─── Constants ────────────────────────────────────────────────────────────
+    // ─── Constants ──────────────────────────────────────────────────────────
     uint256 public constant SOFTCAP_USD      = 12_115_000 * 1e18; // USD 12.115M (18 dec)
     uint256 public constant OPS_RELEASE_USDT = 550_000 * 1e18;    // USD 550k
     uint256 public constant DEX_LIQUIDITY_USDT = 2_800_000 * 1e18; // USD 2.8M
     uint256 public constant CHAINLINK_STALENESS = 3600;            // 1 hour max age
 
-    // ─── Phase definitions ────────────────────────────────────────────────────
+    // ─── Phase definitions ──────────────────────────────────────────────────
     struct Phase {
         uint256 startTime;
         uint256 endTime;
@@ -111,7 +111,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
     Phase[6] public phases;
     bool     public phaseVIRushActive; // Operator-controlled rush toggle for Phase VI
 
-    // ─── Investor records ─────────────────────────────────────────────────────
+    // ─── Investor records ───────────────────────────────────────────────────
     struct InvestorData {
         uint256 gcoreAllocated; // Total GCORE to receive
         uint256 bnbPaid;        // BNB paid (wei)
@@ -124,7 +124,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
     address[] public investorList;
     mapping(address => bool) private _inInvestorList;
 
-    // ─── Presale state ────────────────────────────────────────────────────────
+    // ─── Presale state ──────────────────────────────────────────────────────
     uint256 public totalRaisedUSD;    // Cumulative USD raised, 18 dec
     uint256 public totalBNBCollected; // Total BNB in contract
     uint256 public totalUSDTCollected;// Total USDT in contract
@@ -133,7 +133,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
     bool    public softcapTriggered;
     uint256 public tgeTimestamp;
 
-    // ─── Events ───────────────────────────────────────────────────────────────
+    // ─── Events ─────────────────────────────────────────────────────────────
     event TokensPurchased(
         address indexed buyer,
         uint256 usdAmount,
@@ -149,7 +149,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
     event PhaseExhausted(uint8 indexed phaseIdx, address indexed closer, bool wasSweep);
     event ContractsLinked(address vesting, address refund, address ops);
 
-    // ─── Constructor ──────────────────────────────────────────────────────────
+    // ─── Constructor ────────────────────────────────────────────────────────
     constructor(
         address _gcore,
         address _usdt,
@@ -189,7 +189,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         emit ContractsLinked(_vesting, _refund, _ops);
     }
 
-    // ─── Whitelist ────────────────────────────────────────────────────────────
+    // ─── Whitelist ──────────────────────────────────────────────────────────
     function addToWhitelist(address investor) external onlyRole(OPERATOR_ROLE) {
         if (investor == address(0)) revert ZeroAddress();
         if (!investors[investor].whitelisted) {
@@ -220,14 +220,14 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         emit WhitelistRemoved(investor);
     }
 
-    // ─── Rush toggle (Phase VI only) ──────────────────────────────────────────
+    // ─── Rush toggle (Phase VI only) ────────────────────────────────────────
     function setPhaseVIRush(bool active) external onlyRole(OPERATOR_ROLE) {
         if (_activePhaseIndex() != 5) revert NotPhaseVI();
         phaseVIRushActive = active;
         emit RushToggled(active);
     }
 
-    // ─── Purchase: BNB ────────────────────────────────────────────────────────
+    // ─── Purchase: BNB ──────────────────────────────────────────────────────
     function buyWithBNB() external payable whenNotPaused nonReentrant {
         if (finalized)          revert PresaleClosed();
         if (msg.value == 0)     revert NoBNBSent();
@@ -252,7 +252,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         emit TokensPurchased(msg.sender, usdValue, gcoreAmount, phaseIdx + 1, isRush);
     }
 
-    // ─── Purchase: USDT ───────────────────────────────────────────────────────
+    // ─── Purchase: USDT ─────────────────────────────────────────────────────
     function buyWithUSDT(uint256 usdtAmount) external whenNotPaused nonReentrant {
         if (finalized)           revert PresaleClosed();
         if (usdtAmount == 0)     revert NoUSDTSent();
@@ -276,7 +276,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         emit TokensPurchased(msg.sender, usdtAmount, gcoreAmount, phaseIdx + 1, isRush);
     }
 
-    // ─── Finalize ─────────────────────────────────────────────────────────────
+    // ─── Finalize ───────────────────────────────────────────────────────────
     /// @notice Sets the TGE date (only relevant on presale success). Call before finalize().
     function setTGETimestamp(uint256 ts) external onlyRole(ADMIN_ROLE) {
         if (finalized) revert AlreadyFinalized();
@@ -312,7 +312,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         }
     }
 
-    // ─── Admin: withdraw raised funds to custody (post-finalize, success) ─────
+    // ─── Admin: withdraw raised funds to custody (post-finalize, success) ───
     function withdrawToCustody(address custodyAddress) external onlyRole(ADMIN_ROLE) nonReentrant {
         if (!finalized || !presaleSuccess) revert NotFinalizedOrSuccess();
         if (custodyAddress == address(0))  revert ZeroAddress();
@@ -329,7 +329,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         }
     }
 
-    // ─── View helpers ─────────────────────────────────────────────────────────
+    // ─── View helpers ───────────────────────────────────────────────────────
     function getCurrentPhase() external view returns (uint8 phase, bool isRush) {
         uint256 idx = _activePhaseIndex();
         return (uint8(idx + 1), _isRushPeriod(uint8(idx)));
@@ -347,7 +347,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         return investorList.length;
     }
 
-    // ─── Admin: trigger softcap release (mid-presale) ─────────────────────────
+    // ─── Admin: trigger softcap release (mid-presale) ───────────────────────
     function triggerSoftcapRelease() external onlyRole(ADMIN_ROLE) nonReentrant {
         if (softcapTriggered)           revert AlreadyTriggered();
         if (finalized)                  revert AlreadyFinalized();
@@ -355,11 +355,11 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         _executeSoftcapRelease();
     }
 
-    // ─── Pause ────────────────────────────────────────────────────────────────
+    // ─── Pause ──────────────────────────────────────────────────────────────
     function pause()   external onlyRole(ADMIN_ROLE) { _pause(); }
     function unpause() external onlyRole(ADMIN_ROLE) { _unpause(); }
 
-    // ─── Internal: purchase logic ─────────────────────────────────────────────
+    // ─── Internal: purchase logic ───────────────────────────────────────────
     function _processPurchase(address buyer, uint256 usdValue) internal returns (uint256 gcoreAmount) {
         if (!investors[buyer].whitelisted) revert NotWhitelisted();
 
@@ -399,7 +399,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         investors[buyer].gcoreAllocated += gcoreAmount;
     }
 
-    // ─── Internal: phase detection ────────────────────────────────────────────
+    // ─── Internal: phase detection ──────────────────────────────────────────
     function _activePhaseIndex() internal view returns (uint256) {
         bool prevExhausted = false;
         for (uint256 i = 0; i < 6; i++) {
@@ -429,7 +429,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         return block.timestamp >= phase.rushStartTime;
     }
 
-    // ─── Internal: Chainlink BNB price ────────────────────────────────────────
+    // ─── Internal: Chainlink BNB price ──────────────────────────────────────
     function _getBNBPriceUSD() internal view returns (uint256) {
         (
             uint80  roundId,
@@ -446,7 +446,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         return uint256(answer) * 1e10;
     }
 
-    // ─── Internal: finalize helpers ───────────────────────────────────────────
+    // ─── Internal: finalize helpers ─────────────────────────────────────────
     function _executeSoftcapRelease() internal {
         softcapTriggered = true;
         opsWallet.enableRelease();
@@ -492,7 +492,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         return true;
     }
 
-    // ─── LiquidityLock address (set separately to break circular dep) ─────────
+    // ─── LiquidityLock address (set separately to break circular dep) ───────
     address public liquidityLock;
 
     function setLiquidityLock(address _liqLock) external onlyRole(ADMIN_ROLE) {
@@ -501,7 +501,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
         liquidityLock = _liqLock;
     }
 
-    // ─── Phase initialization ──────────────────────────────────────────────────
+    // ─── Phase initialization ───────────────────────────────────────────────
     // Timestamps (UTC):
     //   Jan 1, 2027 = 1798761600   Feb 1 = 1801440000   Mar 1 = 1803859200
     //   Apr 1, 2027 = 1806537600   May 1, 2027 = 1809129600
