@@ -24,7 +24,7 @@ contract GCOREToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausabl
 
     uint256 public constant MAX_SUPPLY = 700_000_000 * 1e18;
 
-    // Fixed allocations (Spec 2.2)
+    // Fixed allocations
     uint256 public constant LIQUIDITY_ALLOCATION =  28_000_000 * 1e18; // 4.00%
     uint256 public constant TEAM_ALLOCATION      =  52_000_000 * 1e18; // 7.43%
     uint256 public constant COMMUNITY_ALLOCATION =  10_000_000 * 1e18; // 1.43%
@@ -32,10 +32,10 @@ contract GCOREToken is ERC20, ERC20Burnable, ERC20Permit, AccessControl, Pausabl
     uint256 private constant INITIAL_MINT =
         LIQUIDITY_ALLOCATION + TEAM_ALLOCATION + COMMUNITY_ALLOCATION; // 90_000_000
 
-    // ─── Presale contract link (set once) ────────────────────────────────────
+    // ─── Presale contract link (set once) ───────────────────────────────────
     address public presaleContract;
 
-    // ─── Custom errors ────────────────────────────────────────────────────────
+    // ─── Custom errors ──────────────────────────────────────────────────────
     error ZeroAddress();
     error ExceedsMaxSupply();
     error PresaleContractAlreadySet();
