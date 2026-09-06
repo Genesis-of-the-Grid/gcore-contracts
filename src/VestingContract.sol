@@ -19,7 +19,7 @@ interface ISeedContract {
 
 /**
  * @title VestingContract
- * @notice Dynamic vesting for presale investors (Spec 3.1 / 3.2).
+ * @notice Dynamic vesting for presale investors.
  *
  *  All investors receive the SAME vesting tier, regardless of purchase phase.
  *  Tier is determined by total USD raised at presale end (31.10.2027).
@@ -46,7 +46,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
     IERC20  public gcore;
     bool    public tokenSet;
 
-    // ─── Vesting tiers (Spec 3.1) ─────────────────────────────────────────────
+    // ─── Vesting tiers ──────────────────────────────────────────────────────
     struct VestingTier {
         uint256 vestingMonths; // Linear vesting duration in months (no TGE unlock)
     }
@@ -59,7 +59,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
 
     VestingTier[5] public tiers;
 
-    // ─── State ────────────────────────────────────────────────────────────────
+    // ─── State ──────────────────────────────────────────────────────────────
     mapping(address => uint256) public allocation;    // Total GCORE allocated
     mapping(address => uint256) public claimed;       // Total GCORE claimed
     address[] public investors;
@@ -74,7 +74,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
     bool    public seedContractSet;
     mapping(address => bool) public seedAllocationImported;
 
-    // ─── Custom errors ────────────────────────────────────────────────────────
+    // ─── Custom errors ──────────────────────────────────────────────────────
     error ZeroAddress();
     error ZeroAmount();
     error AlreadySet();
@@ -89,7 +89,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
     error TGENotReached();
     error NothingToClaim();
 
-    // ─── Events ───────────────────────────────────────────────────────────────
+    // ─── Events ─────────────────────────────────────────────────────────────
     event AllocationAdded(address indexed investor, uint256 gcoreAmount);
     event PresaleFailedMarked();
     event FundingLevelSet(uint256 totalRaisedUSD, uint256 tierIndex);
@@ -113,7 +113,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
         tokenSet = true;
     }
 
-    // ─── Called by PresaleContract on each purchase ───────────────────────────
+    // ─── Called by PresaleContract on each purchase ─────────────────────────
     function addAllocation(address investor, uint256 gcoreAmount)
         external onlyRole(PRESALE_ROLE)
     {
@@ -128,7 +128,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
         emit AllocationAdded(investor, gcoreAmount);
     }
 
-    // ─── Called by PresaleContract at finalize (failure path) ─────────────────
+    // ─── Called by PresaleContract at finalize (failure path) ───────────────
     function markPresaleFailed() external onlyRole(PRESALE_ROLE) {
         if (!vestingActive)  revert VestingNotActive();
         if (presaleFailed)   revert AlreadyMarked();
@@ -136,7 +136,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
         emit PresaleFailedMarked();
     }
 
-    // ─── Called by PresaleContract at finalize ────────────────────────────────
+    // ─── Called by PresaleContract at finalize ──────────────────────────────
     function setFundingLevel(uint256 totalRaisedUSD)
         external onlyRole(PRESALE_ROLE)
     {
@@ -161,7 +161,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
         emit TGESet(_tgeTimestamp);
     }
 
-    // ─── Admin: burn stuck tokens after presale failure ───────────────────────
+    // ─── Admin: burn stuck tokens after presale failure ─────────────────────
     /// @notice Burns all GCORE held here if presale failed (Softcap not reached).
     function burnOnFailure() external onlyRole(ADMIN_ROLE) {
         if (!presaleFailed) revert PresaleNotFailed();
@@ -173,7 +173,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
         emit TokensBurned(balance);
     }
 
-    // ─── Seed import ──────────────────────────────────────────────────────────
+    // ─── Seed import ────────────────────────────────────────────────────────
     /// @notice Register the SeedContract address (one-time, admin only).
     function setSeedContract(address _seed) external onlyRole(ADMIN_ROLE) {
         if (seedContractSet)        revert AlreadySet();
@@ -209,7 +209,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
         }
     }
 
-    // ─── Investor: claim vested tokens ────────────────────────────────────────
+    // ─── Investor: claim vested tokens ──────────────────────────────────────
     function claimTokens() external whenNotPaused nonReentrant {
         if (!vestingActive)                                    revert VestingNotActive();
         if (tgeTimestamp == 0 || block.timestamp < tgeTimestamp) revert TGENotReached();
@@ -222,7 +222,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
         emit TokensClaimed(msg.sender, claimable);
     }
 
-    // ─── View: claimable amount ────────────────────────────────────────────────
+    // ─── View: claimable amount ─────────────────────────────────────────────
     function claimableAmount(address investor) public view returns (uint256) {
         if (!vestingActive || tgeTimestamp == 0 || block.timestamp < tgeTimestamp) {
             return 0;
@@ -271,7 +271,7 @@ contract VestingContract is AccessControl, Pausable, ReentrancyGuard {
         return investors.length;
     }
 
-    // ─── Tier initialization ──────────────────────────────────────────────────
+    // ─── Tier initialization ────────────────────────────────────────────────
     function _initTiers() private {
         // No TGE unlock in any tier — pure linear over the duration.
         tiers[0] = VestingTier({ vestingMonths: 12 }); // Tier 1: Softcap $12.1M
