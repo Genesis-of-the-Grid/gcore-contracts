@@ -2,9 +2,10 @@
 
 Smart contracts for the **Genesis Core Token (GCORE)** presale on **BNB Chain**.  **Not yet pushed on mainnet**
 
-This repository contains the full, unmodified Solidity source of the seven production
-contracts. It is published for exchange listings, launchpad reviews and independent
-audit
+This repository contains the full, unmodified Solidity source of the eight production
+contracts — the seven presale contracts in [`src/`](src/) plus the standalone Early Bird
+sale in [`earlybird/`](earlybird/). It is published for exchange listings, launchpad
+reviews and independent audit
 
 | | |
 |---|---|
@@ -12,7 +13,7 @@ audit
 | **Standard** | BEP-20 (ERC-20 + Burnable + Permit) |
 | **Chain** | BNB Chain |
 | **Max supply** | 700,000,000 GCORE (hard cap, enforced in `mint()`) |
-| **Solidity** | `^0.8.24` |
+| **Solidity** | `^0.8.24` (presale) · `0.8.35` (Early Bird) |
 | **Dependencies** | OpenZeppelin Contracts (only) |
 | **License** | MIT |
 
@@ -29,6 +30,7 @@ audit
 | [`OpsWalletRelease.sol`](src/OpsWalletRelease.sol) | One-time, purpose-restricted USD 550,000 operational release after softcap, authorised by the project Safe. |
 | [`TeamVesting.sol`](src/TeamVesting.sol) | The 52,000,000 GCORE team allocation: 12-month cliff, then 24-month linear, every withdrawal authorised by the project Safe. |
 | [`LiquidityLock.sol`](src/LiquidityLock.sol) | Adds the initial PancakeSwap V2 liquidity and locks the resulting LP tokens for 24 months. |
+| [`earlybird/SeedContract.sol`](earlybird/SeedContract.sol) | Standalone Early Bird (Phase 0) sale, ahead of the presale. Records USDT-paid allocations on-chain; those allocations are later imported into `VestingContract`. |
 
 ---
 
@@ -44,6 +46,42 @@ never created**.
 | Team | 52,000,000 | 7.43 % | At deployment → `TeamVesting` |
 | DEX liquidity | 28,000,000 | 4.00 % | At deployment → `LiquidityLock` |
 | Community | 10,000,000 | 1.43 % | At deployment → community wallet |
+
+---
+
+## Early Bird (Phase 0)
+
+[`earlybird/SeedContract.sol`](earlybird/SeedContract.sol) is a **standalone** contract for
+the Early Bird round that precedes the presale. It has no dependency on the seven presale
+contracts and is deployed on its own.
+
+**Live on BNB Chain:**
+[`0x23e2215a2eFF8937B9c8DfDFcD2A4e4EE08D1Ed2`](https://bscscan.com/address/0x23e2215a2eFF8937B9c8DfDFcD2A4e4EE08D1Ed2)
+
+| | |
+|---|---|
+| **Price** | 0.02 USDT per GCORE (50 GCORE per 1 USDT) |
+| **Minimum** | 100 USDT |
+| **Hardcap** | 10,000,000 GCORE |
+| **Payment** | USDT (BEP-20) only |
+| **Access** | KYC approval required per address |
+
+Investors pay USDT and receive an on-chain **allocation record** — no GCORE moves at
+purchase time and there is no on-chain claim here. USDT goes straight to the treasury
+address; the contract never custodies funds. Allocations are honoured after TGE, and are
+pulled into the main `VestingContract` through its permissionless, paginated
+`importFromSeed()`, so Early Bird investors vest on the same schedule as presale investors.
+Tokens are only distributed if the public presale reaches its softcap.
+
+A remainder below the minimum purchase could never be bought and would strand the hardcap,
+so the final buy absorbs it and the sale closes exactly at 10,000,000 GCORE.
+
+**Access control** mirrors the presale contracts: ownership is `Ownable2Step` and intended
+to be held by a multisig, with `renounceOwnership()` overridden to revert so the sale can
+never be left unowned — it must stay stoppable and the operator key must stay rotatable. A
+separate low-privilege `operator` hot wallet lets the KYC backend approve addresses
+automatically; the operator can flip the KYC flag and nothing else — no access to funds, no
+control over the sale, the treasury or ownership.
 
 ---
 
@@ -175,22 +213,59 @@ cannot shorten any lock or vesting schedule.
 Dependencies are limited to OpenZeppelin Contracts. With [Foundry](https://book.getfoundry.sh/):
 
 ```bash
-forge init --no-git .
-forge install OpenZeppelin/openzeppelin-contracts
-forge build
+git clone https://github.com/Genesis-of-the-Grid/gcore-contracts.git
+cd gcore-contracts
+
+forge install OpenZeppelin/openzeppelin-contracts@v5.6.1
+
+forge build                              # the seven presale contracts
+FOUNDRY_PROFILE=earlybird forge build    # the Early Bird contract
 ```
 
-Add to `remappings.txt`:
+The two builds are separate because the Early Bird contract is already deployed and was
+compiled with different settings than the presale contracts will be — see the table below.
 
-```
-@openzeppelin/=lib/openzeppelin-contracts/
-```
+**Pin the OpenZeppelin tag.** `v5.6.1` is the version the deployed contracts were compiled
+against; installing any other version produces different bytecode and verification will not
+match. `foundry.toml` in this repository pins the rest of what verification depends on:
+
+| Setting | Presale (`src/`) | Early Bird (`earlybird/`) |
+|---|---|---|
+| `solc` | `0.8.35` | `0.8.35` |
+| `evm_version` | `cancun` | **`paris`** |
+| `optimizer` | enabled, `200` runs | enabled, `200` runs |
+| `bytecode_hash` | `none` | default (metadata kept) |
+
+Reproducing bytecode requires all of these to match, plus the OpenZeppelin tag.
+
+For the presale contracts, `bytecode_hash = "none"` is deliberate: Solidity otherwise
+appends a metadata hash covering each source file's *path*, so the same code compiled from
+a different directory layout produces different bytecode. Omitting it makes the build
+path-independent, and a clean clone of this repository reproduces the deploy build byte for
+byte — verified for all seven.
+
+The Early Bird contract is **already deployed**, so its settings are fixed by what is on
+chain: `evm_version = "paris"` and the metadata hash left in place.
+
+Its deployed **runtime code matches this source exactly** — byte for byte, once the two
+immutable slots (both the BNB Chain USDT address) are accounted for. The trailing metadata
+hash differs, and unavoidably so: that hash covers each source file's path, and the
+contract was deployed from a standalone project where it sat at `src/SeedContract.sol`
+rather than `earlybird/SeedContract.sol`. To reproduce the metadata hash as well, place the
+file at `src/SeedContract.sol` in its own Foundry project using the Early Bird settings
+above. The authoritative verified source for the deployed contract is on
+[BscScan](https://bscscan.com/address/0x23e2215a2eFF8937B9c8DfDFcD2A4e4EE08D1Ed2#code).
 
 ---
 
 ## Deployment order
 
-The contracts have circular references, so they are wired up in this order:
+`earlybird/SeedContract.sol` is independent — it is deployed on its own, ahead of and
+separately from everything below, and takes no constructor reference to any of these
+contracts. The link runs the other way and only later: `VestingContract.setSeedContract()`
+followed by `importFromSeed()`.
+
+The seven presale contracts have circular references, so they are wired up in this order:
 
 1. `LiquidityLock`, `TeamVesting`, `VestingContract`
 2. `GCOREToken` — mints the three fixed allocations in its constructor
