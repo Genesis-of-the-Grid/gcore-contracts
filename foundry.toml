@@ -1,0 +1,49 @@
+# The presale contracts and the Early Bird contract were built with different
+# settings, so each has its own profile. Building one with the other's settings
+# produces bytecode that matches neither deployment.
+#
+#   forge build                            # presale contracts (src/)
+#   FOUNDRY_PROFILE=earlybird forge build  # Early Bird (earlybird/)
+
+[profile.default]
+src   = "src"
+out   = "out"
+libs  = ["lib"]
+
+solc           = "0.8.35"
+evm_version    = "cancun"
+optimizer      = true
+optimizer_runs = 200
+
+# Solidity appends a CBOR metadata hash that covers each source file's *path*, so
+# the same code compiled from a different directory layout yields different
+# bytecode. Omitting it keeps this build reproducible from any checkout.
+bytecode_hash = "none"
+
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"
+]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Early Bird — already deployed on BNB Chain. These settings reproduce the
+# deployed contract and must not be changed: evm_version is "paris" (not
+# "cancun"), and the metadata hash is left in place (no bytecode_hash = "none").
+# ─────────────────────────────────────────────────────────────────────────────
+[profile.earlybird]
+src   = "earlybird"
+out   = "out"
+libs  = ["lib"]
+
+solc           = "0.8.35"
+evm_version    = "paris"
+optimizer      = true
+optimizer_runs = 200
+
+# Must be set explicitly: profiles inherit from [profile.default], which sets
+# bytecode_hash = "none". The deployed Early Bird contract carries its metadata
+# hash, so leaving it inherited produces bytecode 41 bytes short of the real one.
+bytecode_hash = "ipfs"
+
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"
+]
