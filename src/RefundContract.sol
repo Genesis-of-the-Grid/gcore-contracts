@@ -21,7 +21,7 @@ interface IPresaleData {
 
 /**
  * @title RefundContract
- * @notice Investor-initiated refund on Softcap failure (Spec 5.2).
+ * @notice Investor-initiated refund on Softcap failure.
  *
  *  Triggered by: Softcap not reached by 31.10.2027.
  *  Claim window: 180 days from presale end (01.11.2027 – 29.04.2028).
@@ -48,7 +48,7 @@ contract RefundContract is AccessControl, ReentrancyGuard {
 
     mapping(address => bool) public refundClaimed;
 
-    // ─── Custom errors ────────────────────────────────────────────────────────
+    // ─── Custom errors ──────────────────────────────────────────────────────
     error ZeroAddress();
     error AlreadyEnabled();
     error RefundNotActive();
@@ -75,7 +75,7 @@ contract RefundContract is AccessControl, ReentrancyGuard {
         _grantRole(ADMIN_ROLE, admin);
     }
 
-    // ─── Called by PresaleContract on finalize (fail) ─────────────────────────
+    // ─── Called by PresaleContract on finalize (fail) ───────────────────────
     function enableRefund() external payable onlyRole(PRESALE_ROLE) {
         if (refundEnabled) revert AlreadyEnabled();
         refundEnabled   = true;
@@ -87,7 +87,7 @@ contract RefundContract is AccessControl, ReentrancyGuard {
         emit USDTDeposited(amount);
     }
 
-    // ─── Investor: claim refund ────────────────────────────────────────────────
+    // ─── Investor: claim refund ─────────────────────────────────────────────
     function claimRefund() external nonReentrant {
         if (!refundEnabled)                                         revert RefundNotActive();
         if (block.timestamp > refundStartTime + CLAIM_WINDOW)       revert ClaimWindowExpired();
@@ -121,8 +121,8 @@ contract RefundContract is AccessControl, ReentrancyGuard {
         }
     }
 
-    // ─── Admin: resolve unclaimed funds after 180-day window ──────────────────
-    // Disposition per legal guidance (Spec 5.2).
+    // ─── Admin: resolve unclaimed funds after 180-day window ────────────────
+    // Disposition per legal guidance.
     function resolveUnclaimed(address recipient) external onlyRole(ADMIN_ROLE) {
         if (!refundEnabled)                                          revert RefundNotActive();
         if (block.timestamp <= refundStartTime + CLAIM_WINDOW)       revert WindowStillOpen();
