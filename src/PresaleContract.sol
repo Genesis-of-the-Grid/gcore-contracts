@@ -514,7 +514,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
             pricePerGcore:  0.04 ether,          // $0.04
             tokenPool:      50_000_000 * 1e18,
             tokensSold:     0,
-            minTicketUSD:   10_000 * 1e18,       // $10,000
+            minTicketUSD:   2_500 * 1e18,        // $2,500
             rushMultiplier: 1.50 ether,          // ×1.50
             rushStartTime:  1800748800,          // 24.01.2027
             rushAlternating:false
@@ -527,7 +527,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
             pricePerGcore:  0.05 ether,          // $0.05
             tokenPool:      50_000_000 * 1e18,
             tokensSold:     0,
-            minTicketUSD:   7_000 * 1e18,        // $7,000
+            minTicketUSD:   2_000 * 1e18,        // $2,000
             rushMultiplier: 1.25 ether,          // ×1.25
             rushStartTime:  1803168000,          // 21.02.2027
             rushAlternating:false
@@ -540,7 +540,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
             pricePerGcore:  0.06 ether,          // $0.06
             tokenPool:      50_000_000 * 1e18,
             tokensSold:     0,
-            minTicketUSD:   5_000 * 1e18,        // $5,000
+            minTicketUSD:   1_500 * 1e18,        // $1,500
             rushMultiplier: 1.20 ether,          // ×1.20
             rushStartTime:  1805846400,          // 24.03.2027
             rushAlternating:false
@@ -553,7 +553,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
             pricePerGcore:  0.07 ether,          // $0.07
             tokenPool:      125_000_000 * 1e18,
             tokensSold:     0,
-            minTicketUSD:   5_000 * 1e18,        // $5,000
+            minTicketUSD:   1_000 * 1e18,        // $1,000
             rushMultiplier: 1.20 ether,          // ×1.20
             rushStartTime:  1808438400,          // 23.04.2027
             rushAlternating:false
@@ -566,7 +566,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
             pricePerGcore:  0.08 ether,          // $0.08
             tokenPool:      125_000_000 * 1e18,
             tokensSold:     0,
-            minTicketUSD:   1_000 * 1e18,        // $1,000
+            minTicketUSD:   750 * 1e18,          // $750
             rushMultiplier: 1.25 ether,          // ×1.25
             rushStartTime:  1811116800,          // 24.05.2027
             rushAlternating:false
@@ -579,7 +579,7 @@ contract PresaleContract is AccessControl, Pausable, ReentrancyGuard {
             pricePerGcore:  0.09 ether,          // $0.09
             tokenPool:      210_000_000 * 1e18,
             tokensSold:     0,
-            minTicketUSD:   0,                   // Open — no min ticket
+            minTicketUSD:   500 * 1e18,          // $500
             rushMultiplier: 1.15 ether,          // ×1.15
             rushStartTime:  1824076800,          // 21.10.2027 (last 11 days)
             rushAlternating:true
