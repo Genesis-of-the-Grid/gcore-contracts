@@ -76,7 +76,8 @@ Tokens are only distributed if the public presale reaches its softcap.
 A remainder below the minimum purchase could never be bought and would strand the hardcap,
 so the final buy absorbs it and the sale closes exactly at 10,000,000 GCORE.
 
-**Access control** mirrors the presale contracts: ownership is `Ownable2Step` and held by a multisig, with `renounceOwnership()` overridden to revert so the sale can
+**Access control** mirrors the presale contracts: ownership is `Ownable2Step` and intended
+to be held by a multisig, with `renounceOwnership()` overridden to revert so the sale can
 never be left unowned — it must stay stoppable and the operator key must stay rotatable. A
 separate low-privilege `operator` hot wallet lets the KYC backend approve addresses
 automatically; the operator can flip the KYC flag and nothing else — no access to funds, no
@@ -92,12 +93,12 @@ whichever happens first.
 
 | Phase | Name | Price | Window | Pool | Min. ticket | Rush |
 |---|---|---:|---|---:|---:|---:|
-| I | Genesis Awakens | $0.04 | 01.01 – 31.01.2027 | 50,000,000 | $10,000 | ×1.50 |
-| II | Echoes of the Bastion | $0.05 | 01.02 – 28.02.2027 | 50,000,000 | $7,000 | ×1.25 |
-| III | Architects Arise | $0.06 | 01.03 – 31.03.2027 | 50,000,000 | $5,000 | ×1.20 |
-| IV | Founders Assemble | $0.07 | 01.04 – 30.04.2027 | 125,000,000 | $5,000 | ×1.20 |
-| V | The Last Bastion | $0.08 | 01.05 – 31.05.2027 | 125,000,000 | $1,000 | ×1.25 |
-| VI | The Last Gate | $0.09 | 01.06 – 31.10.2027 | 210,000,000 | — | ×1.15 |
+| I | Genesis Awakens | $0.04 | 01.01 – 31.01.2027 | 50,000,000 | $2,500 | ×1.50 |
+| II | Echoes of the Bastion | $0.05 | 01.02 – 28.02.2027 | 50,000,000 | $2,000 | ×1.25 |
+| III | Architects Arise | $0.06 | 01.03 – 31.03.2027 | 50,000,000 | $1,500 | ×1.20 |
+| IV | Founders Assemble | $0.07 | 01.04 – 30.04.2027 | 125,000,000 | $1,000 | ×1.20 |
+| V | The Last Bastion | $0.08 | 01.05 – 31.05.2027 | 125,000,000 | $750 | ×1.25 |
+| VI | The Last Gate | $0.09 | 01.06 – 31.10.2027 | 210,000,000 | $500 | ×1.15 |
 
 **Rush** runs in the final 7 days of each phase (11 days in Phase VI, where it is
 operator-toggled). The multiplier increases the **token quantity received**, not the
